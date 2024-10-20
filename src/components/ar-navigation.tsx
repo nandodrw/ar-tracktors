@@ -1,9 +1,5 @@
 import {
-	BoxGeometry,
-	CylinderGeometry,
 	HemisphereLight,
-	Mesh,
-	MeshPhongMaterial,
 	PerspectiveCamera,
 	Scene,
 	WebGLRenderer
@@ -20,24 +16,11 @@ export const ArNavigation = () => {
 	const camera = useRef<PerspectiveCamera>(new PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.01, 11 ));
 	const renderer = useRef<WebGLRenderer>(new WebGLRenderer( { antialias: true, alpha: true, canvas: canvas.current !== null ? canvas.current : undefined  } ));
 	const light = useRef<HemisphereLight>(new HemisphereLight( 0xffffff, 0xbbbbff, 1 ))
-	const geometry = useRef(new CylinderGeometry( 0, 0.05, 0.2, 32 ).rotateX( Math.PI / 2 ));
 	const controller = useRef(renderer.current.xr.getController( 0 ));
-
-	const cubeGeometry = useRef(new BoxGeometry( 0.5, 0.5, 0.5, ));
-	const cubeMaterial = useRef(new MeshPhongMaterial( { color: 0xffffff * Math.random(), wireframe: true } ))
-	const cubeMesh = useRef(new Mesh( cubeGeometry.current, cubeMaterial.current ));
 
 	const movementGrid = useRef(new MovementGrid())
 
 	const gui = useRef<GUI | null>(null)
-
-	const onSelect = useCallback(() => {
-		const material = new MeshPhongMaterial( { color: 0xffffff * Math.random() } );
-		const mesh = new Mesh( geometry.current, material );
-		mesh.position.set( 0, 0, - 0.3 ).applyMatrix4( controller.current.matrixWorld );
-		mesh.quaternion.setFromRotationMatrix( controller.current.matrixWorld );
-		scene.current.add( mesh );
-	}, [])
 
 	const onWindowResize = useCallback(() => {
 		camera.current.aspect = window.innerWidth / window.innerHeight;
