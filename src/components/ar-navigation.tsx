@@ -10,6 +10,7 @@ import GUI from 'lil-gui'
 import {MovementGrid} from '../graphics/movement-grid'
 import {collection, getDocs} from 'firebase/firestore'
 import {coordinatesToGrid} from '../utils/geo-location'
+import {FieldSticks} from '../graphics/field-sticks'
 
 export const ArNavigation = ({db}: {db: any}) => {
 
@@ -17,6 +18,7 @@ export const ArNavigation = ({db}: {db: any}) => {
 	const [stickPlaneCoordinates, setStickPlaneCoordinates] = useState<{ x: number, y: number }[]>([])
 	const [gpsLocation, setGpsLocation] = useState<{ lat: number; lon: number } | null>(null);
 	const [deviceOrientation, setDeviceOrientation] = useState<{ alpha: number | null, beta: number | null, gamma: number | null }>({ alpha: null, beta: null, gamma: null });
+	const [stickInitialized, setStickInitialized] = useState(false)
 
 	useEffect(() => {
 		if (db) {
@@ -62,19 +64,28 @@ export const ArNavigation = ({db}: {db: any}) => {
 	useEffect(() => {
 		getGpsLocation();
 		// Add event listener for device orientation
-		window.addEventListener('deviceorientation', handleDeviceOrientation, true);
 
-		// Cleanup
-		return () => {
-			window.removeEventListener('deviceorientation', handleDeviceOrientation, true);
-		};
+
+		// // Cleanup
+		// return () => {
+		// 	window.removeEventListener('deviceorientation', handleDeviceOrientation, true);
+		// };
 	}, [getGpsLocation, handleDeviceOrientation])
 
 	useEffect(() => {
-		if (gpsLocation && deviceOrientation?.alpha && stickCoordinates.length > 0) {
-			coordinatesToGrid(gpsLocation, deviceOrientation.alpha, stickCoordinates)
+		if (gpsLocation && deviceOrientation?.alpha && stickCoordinates.length > 0 && !stickInitialized) {
+			const coordinates = coordinatesToGrid(gpsLocation, deviceOrientation.alpha, stickCoordinates)
+			console.log('X Y coordinates', coordinates)
+			setStickPlaneCoordinates(coordinates)
+			setStickInitialized(true)
 		}
 	}, [gpsLocation, deviceOrientation, stickCoordinates])
+
+	useEffect(() => {
+		if (stickPlaneCoordinates.length > 0) {
+			sticksObj.current = new FieldSticks(stickPlaneCoordinates)
+		}
+	}, [stickPlaneCoordinates]);
 
 	const canvas = useRef<HTMLCanvasElement>(null);
 	const scene = useRef<Scene>(new Scene());
@@ -84,6 +95,7 @@ export const ArNavigation = ({db}: {db: any}) => {
 	const controller = useRef(renderer.current.xr.getController( 0 ));
 
 	const movementGrid = useRef(new MovementGrid())
+	const sticksObj = useRef<FieldSticks | null>(null)
 
 	const gui = useRef<GUI | null>(null)
 
@@ -158,7 +170,14 @@ export const ArNavigation = ({db}: {db: any}) => {
 						xOffset: ${movementGrid.current.xOffset}
 						zOffset: ${movementGrid.current.zOffset}
 					`)
+				},
+				pullOrientation() {
+					window.addEventListener('deviceorientation', handleDeviceOrientation, true);
+				},
+				renderSticks() {
+					sticksObj.current?.loadToScene(scene.current, camera.current)
 				}
+
 			}
 
 			gui.current.add(gridMover, 'goForward')
@@ -166,6 +185,8 @@ export const ArNavigation = ({db}: {db: any}) => {
 			gui.current.add(gridMover, 'goLeft')
 			gui.current.add(gridMover, 'goRight')
 			gui.current.add(gridMover, 'alertValues')
+			gui.current.add(gridMover, 'pullOrientation')
+			gui.current.add(gridMover, 'renderSticks')
 
 			setUiInitialized(true)
 		}
@@ -180,16 +201,18 @@ export const ArNavigation = ({db}: {db: any}) => {
 				top: 0,
 				left: 0,
 				width: '400px',
-				height: '250px',
-				background: 'rgba(0, 0, 0, 0.8)',
+				height: '350px',
+				background: 'rgba(0, 0, 0, 0.6)',
 			}}>
 				<h2>Device Position</h2>
 				<div>Lat {gpsLocation?.lat}</div>
 				<div>Lon {gpsLocation?.lon}</div>
 				<h2>Device Orientation</h2>
-				<div>Lat {deviceOrientation?.alpha}</div>
+				<div>Alpha {deviceOrientation?.alpha}</div>
 				<div>Beta {deviceOrientation?.beta}</div>
 				<div>Gamma {deviceOrientation?.gamma}</div>
+				<h2>Rendering</h2>
+				<div>Initialized {stickInitialized}</div>
 			</div>
 			<canvas ref={canvas} style={{width: '100vw', height: '100vh'}}/>
 		</>
