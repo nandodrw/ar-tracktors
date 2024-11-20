@@ -1,4 +1,4 @@
-import {Camera, CylinderGeometry, GridHelper, LineBasicMaterial, Mesh, MeshBasicMaterial, Scene} from 'three'
+import {Camera, CylinderGeometry, Mesh, MeshBasicMaterial, Scene} from 'three'
 
 export class FieldSticks {
 

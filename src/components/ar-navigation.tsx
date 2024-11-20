@@ -81,6 +81,7 @@ export const ArNavigation = ({db}: {db: any}) => {
 				return newPos
 			})
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
 	const getGpsLocation = useCallback(() => {
@@ -118,6 +119,7 @@ export const ArNavigation = ({db}: {db: any}) => {
 			setStickPlaneCoordinates(coordinates)
 			setStickInitialized(true)
 		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [gpsLocation, deviceOrientation, stickCoordinates])
 
 	useEffect(() => {
