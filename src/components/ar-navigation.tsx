@@ -153,16 +153,20 @@ export const ArNavigation = ({db}: {db: any}) => {
 			const gridMover = {
 				goLeft() {
 					movementGrid.current.moveGrid(0.1, 0)
+					sticksObj.current?.moveSticks(0.1, 0)
 					gui.current?.load(movementGrid.current)
 				},
 				goRight() {
 					movementGrid.current.moveGrid(-0.1, 0)
+					sticksObj.current?.moveSticks(-0.1, 0)
 				},
 				goBackward() {
 					movementGrid.current.moveGrid(0, -0.1)
+					sticksObj.current?.moveSticks(0, -0.1)
 				},
 				goForward()  {
 					movementGrid.current.moveGrid(0, 0.1)
+					sticksObj.current?.moveSticks(0, 0.1)
 				},
 				alertValues() {
 					alert(`

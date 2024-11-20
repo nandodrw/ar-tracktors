@@ -21,4 +21,11 @@ export class FieldSticks {
 		this.sticks.forEach((stick) => scene.add(stick))
 		this._camera = camera
 	}
+
+	moveSticks(x: number, z: number) {
+		this.sticks.forEach((stick) => {
+			stick.position.x += x
+			stick.position.z += z
+		})
+	}
 }
