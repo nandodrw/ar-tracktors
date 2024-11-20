@@ -233,7 +233,7 @@ export const ArNavigation = ({db}: {db: any}) => {
 			gui.current.add(gridMover, 'alertValues')
 			gui.current.add(gridMover, 'pullOrientation')
 			gui.current.add(gridMover, 'renderSticks')
-			gui.current.add(walkingMove, 'current')
+			gui.current.add(walkingMove, 'current').name('Walking movement')
 
 			setUiInitialized(true)
 		}
