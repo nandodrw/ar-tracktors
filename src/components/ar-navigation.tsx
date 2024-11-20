@@ -19,6 +19,11 @@ export const ArNavigation = ({db}: {db: any}) => {
 	const [gpsLocation, setGpsLocation] = useState<{ lat: number; lon: number } | null>(null);
 	const [deviceOrientation, setDeviceOrientation] = useState<{ alpha: number | null, beta: number | null, gamma: number | null }>({ alpha: null, beta: null, gamma: null });
 	const [stickInitialized, setStickInitialized] = useState(false)
+	const [velocity, setVelocity] = useState({ x: 0, y: 0, z: 0 })
+	const [position, setPosition] = useState({ x: 0, y: 0, z: 0 })
+	const [acceleration, setAcceleration] = useState({ x: 0, y: 0, z: 0 })
+
+	const walkingMove = useRef(false);
 
 	useEffect(() => {
 		if (db) {
@@ -43,6 +48,40 @@ export const ArNavigation = ({db}: {db: any}) => {
 			gamma: event.gamma,
 		});
 	}, []);
+
+	const handleDeviceMotion = useCallback((event: DeviceMotionEvent) => {
+		const { accelerationIncludingGravity, interval } = event
+
+		if (accelerationIncludingGravity) {
+			const ax = accelerationIncludingGravity.x || 0
+			const ay = accelerationIncludingGravity.y || 0
+			const az = accelerationIncludingGravity.z || 0
+
+			setAcceleration({ x: ax, y: ay, z: az })
+
+			// Calculate velocity
+			setVelocity(prevVelocity => ({
+				x: prevVelocity.x + ax * (interval / 1000),
+				y: prevVelocity.y + ay * (interval / 1000),
+				z: prevVelocity.z + az * (interval / 1000),
+			}))
+
+			// Calculate position
+			setPosition(prevPosition => {
+				const newPos = {
+					x: prevPosition.x + velocity.x * (interval / 1000),
+					y: prevPosition.y + velocity.y * (interval / 1000),
+					z: prevPosition.z + velocity.z * (interval / 1000),
+				}
+				if (walkingMove.current) {
+					movementGrid.current.moveGrid(newPos.x - prevPosition.x, newPos.x - prevPosition.x)
+					sticksObj.current?.moveSticks(newPos.z - prevPosition.z, newPos.z - prevPosition.z)
+				}
+
+				return newPos
+			})
+		}
+	}, [])
 
 	const getGpsLocation = useCallback(() => {
 		if (navigator.geolocation) {
@@ -177,6 +216,7 @@ export const ArNavigation = ({db}: {db: any}) => {
 				},
 				pullOrientation() {
 					window.addEventListener('deviceorientation', handleDeviceOrientation, true);
+					window.addEventListener('devicemotion', handleDeviceMotion, true)
 				},
 				renderSticks() {
 					sticksObj.current?.loadToScene(scene.current, camera.current)
@@ -191,6 +231,7 @@ export const ArNavigation = ({db}: {db: any}) => {
 			gui.current.add(gridMover, 'alertValues')
 			gui.current.add(gridMover, 'pullOrientation')
 			gui.current.add(gridMover, 'renderSticks')
+			gui.current.add(sticksObj, 'current')
 
 			setUiInitialized(true)
 		}
@@ -205,7 +246,7 @@ export const ArNavigation = ({db}: {db: any}) => {
 				top: 0,
 				left: 0,
 				width: '400px',
-				height: '350px',
+				height: '550px',
 				background: 'rgba(0, 0, 0, 0.6)',
 			}}>
 				<h2>Device Position</h2>
@@ -215,6 +256,16 @@ export const ArNavigation = ({db}: {db: any}) => {
 				<div>Alpha {deviceOrientation?.alpha}</div>
 				<div>Beta {deviceOrientation?.beta}</div>
 				<div>Gamma {deviceOrientation?.gamma}</div>
+				<h2>Accelerometer</h2>
+				<div>Acceleration X: {acceleration.x}</div>
+				<div>Acceleration Y: {acceleration.y}</div>
+				<div>Acceleration Z: {acceleration.z}</div>
+				<div>Velocity X: {velocity.x}</div>
+				<div>Velocity Y: {velocity.y}</div>
+				<div>Velocity Z: {velocity.z}</div>
+				<div>Position X: {position.x}</div>
+				<div>Position Y: {position.y}</div>
+				<div>Position Z: {position.z}</div>
 				<h2>Rendering</h2>
 				<div>Initialized {stickInitialized}</div>
 			</div>
