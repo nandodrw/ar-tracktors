@@ -2,11 +2,10 @@ import {LocationContextProvider} from '../context/location-context'
 import React from 'react'
 import {ArNavigation} from '../components/ar-navigation'
 
-
-export const Navigation: React.FC = () => {
+export const Navigation = ({db}: {db: any}) => {
 	return (
 		<LocationContextProvider>
-			<ArNavigation/>
+			<ArNavigation db={db} />
 		</LocationContextProvider>
 	);
 };
